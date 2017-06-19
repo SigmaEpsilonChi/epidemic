@@ -190,12 +190,6 @@ function Agent(spec){
 
 	var randomizeDestination = function(signVector = null){
 		if (pathogen != null) {
-			if (pathogen.getSymptomatic()) {
-				//setMobility(pathogen.getMobility());
-			}
-			else {
-				//setMobility(4);
-			}
 		}
 		// gaussX = gaussian(origin.x-position.x, mobility);
 		// gaussY = gaussian(origin.y-position.y, mobility);

@@ -114,6 +114,8 @@ function Population(spec){
 				survivalDuration: sliders.survivalDurationSlider.value,
 				infectionDuration: sliders.infectionDurationSlider.value,
 				resistanceDuration: sliders.resistanceDurationSlider.value,
+				
+				mobility: sliders.mobilitySlider.value,
 				mortality: sliders.mortalitySlider.value,
 				emission: sliders.emissionSlider.value,
 			});

@@ -46,37 +46,39 @@ function Pathogen(spec){
     var gauss = gaussian(0, mobility);
 
 	var update = function(time, timeDelta){
-		if (host == null) {
-			survivalProgress = tickProgress(survivalProgress, survivalDuration, timeDelta);
+		if (!destroyed) {
+			if (host == null) {
+				survivalProgress = tickProgress(survivalProgress, survivalDuration, timeDelta);
 
-			var x = worldToScreen.transformX(position.x);
-			var y = worldToScreen.transformY(position.y);
-			var r = worldToScreen.scaleX(radius);
-			var p = 1-Math.pow(survivalProgress, 1);
-			sprite.x = x;
-			sprite.y = y;
-			sprite.width = r*p;
-			sprite.height = r*p;
+				var x = worldToScreen.transformX(position.x);
+				var y = worldToScreen.transformY(position.y);
+				var r = worldToScreen.scaleX(radius);
+				var p = 1-Math.pow(survivalProgress, 1);
+				sprite.x = x;
+				sprite.y = y;
+				sprite.width = r*p;
+				sprite.height = r*p;
 
-			if (survivalProgress >= 1) {
-				kill();
+				if (survivalProgress >= 1) {
+					kill();
+				}
+				else {
+			    	for (var i = 0; i < agents.length; i++) {
+			    		contact(agents[i]);
+			    	}
+				}
 			}
 			else {
-		    	for (var i = 0; i < agents.length; i++) {
-		    		contact(agents[i]);
-		    	}
-			}
-		}
-		else {
-			emissionTimer += timeDelta;
-			if (Math.random() < emissionTimer*emission) {
-				emissionTimer = 0;
-				emit();
-			}
+				emissionTimer += timeDelta;
+				if (Math.random() < emissionTimer*emission) {
+					emissionTimer = 0;
+					emit();
+				}
 
-			infectionProgress = tickProgress(infectionProgress, infectionDuration, timeDelta);
+				infectionProgress = tickProgress(infectionProgress, infectionDuration, timeDelta);
 
-			if (infectionProgress >= 1) recover();
+				if (infectionProgress >= 1) recover();
+			}
 		}
 	}
 
@@ -157,7 +159,7 @@ function Pathogen(spec){
 		// Methods
 		update,
 		gauss,
-		
+
 		contact,
 		infect,
 		recover,
