@@ -7,8 +7,9 @@ function Population(spec){
 		sliders,
 	} = spec;
 
-	var agentCount = 0;
 	var agents = [];
+	var agentCount = 0;
+	var susceptibleAgents = [];
 
 	var pathogens = [];
 	var discardedPathogens = [];
@@ -17,6 +18,7 @@ function Population(spec){
     // var seed = 0.7;
 
     var immunity = 0;
+    var mobility = 0;
 
     noise.seed(seed);
 
@@ -73,6 +75,8 @@ function Population(spec){
 					shader: agentShader,
 					agentIndex: agents.length,
 					immune: agents.length/agentCount < immunity,
+					susceptibleAgents,
+					mobility,
 				}));
 			}
 			while (agents.length > agentCount) {
@@ -92,6 +96,15 @@ function Population(spec){
 		}
 	}
 
+	var setMobility = function(MOBILITY){
+		if (mobility != MOBILITY) {
+			mobility = MOBILITY;
+			for (var i = 0; i < agents.length; i++) {
+				agents[i].setMobility(mobility);
+			}
+		}
+	}
+
 	var clearPathogens = function(){
 		for (var i = 0; i < pathogens.length; i++) pathogens[i].destroy();
 		discardedPathogens.length = 0;
@@ -107,15 +120,15 @@ function Population(spec){
 			pathogen = Pathogen({
 				pixi,
 				worldToScreen,
-				agents,
+				agents: susceptibleAgents,
 				addPathogen,
 				discardPathogen,
 
 				survivalDuration: sliders.survivalDurationSlider.value,
 				infectionDuration: sliders.infectionDurationSlider.value,
 				resistanceDuration: sliders.resistanceDurationSlider.value,
-				
-				mobility: sliders.mobilitySlider.value,
+
+				paralysis: sliders.paralysisSlider.value,
 				mortality: sliders.mortalitySlider.value,
 				emission: sliders.emissionSlider.value,
 			});
@@ -170,6 +183,7 @@ function Population(spec){
 
 		setAgentCount,
 		setImmunity,
+		setMobility,
 
 		onPointerDown,
 	}

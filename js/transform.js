@@ -28,7 +28,7 @@ function Transform(spec){
 	}
 
 	var transformY = function(v){
-		return remap(1, 0, 0, h, v)+y;
+		return remap(0, 1, 0, h, v)+y;
 	}
 
 	var untransformX = function(v){
@@ -36,7 +36,7 @@ function Transform(spec){
 	}
 
 	var untransformY = function(v){
-		return remap(0, h, 1, 0, v-y);
+		return remap(0, h, 0, 1, v-y);
 	}
 
 	var setXY = function(X, Y){

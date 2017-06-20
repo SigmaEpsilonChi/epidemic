@@ -61,6 +61,9 @@ function Game(spec){
     var animationTimestamp = 0;
     var redraw = true;
 
+    var gizmos = new PIXI.Graphics();
+    scene.addChild(gizmos);
+
     var start = function(){
         timeDelta = 1/FPS;
         timerId = setInterval(function() {
@@ -103,6 +106,18 @@ function Game(spec){
         boundary.y = zoom;
         boundary.zoom = zoom;
         boundary.aspect = aspect;
+
+        gizmos.clear();
+        gizmos.lineStyle(4, 0xFF0000, 1);
+        let x0 = worldToScreen.transformX(-boundary.x);
+        let x1 = worldToScreen.transformX(boundary.x);
+        let y0 = worldToScreen.transformY(-boundary.y);
+        let y1 = worldToScreen.transformY(boundary.y);
+        gizmos.moveTo(x0, y0);
+        gizmos.lineTo(x0, y1);
+        gizmos.lineTo(x1, y1);
+        gizmos.lineTo(x1, y0);
+        gizmos.lineTo(x0, y0);
     }
 
     var getPathogenSpec = function(){
@@ -180,6 +195,10 @@ function Game(spec){
         population.setImmunity(i);
     }
 
+    var onMobilitySliderChange = function(){
+        population.setMobility(mobilitySlider.value);
+    }
+
     var populationSlider = document.getElementById("populationSlider");
     populationSlider.addEventListener("change", onPopulationSliderChange);
     populationSlider.min = 1;
@@ -193,12 +212,19 @@ function Game(spec){
     immunitySlider.max = 256;
     immunitySlider.step = 1;
     immunitySlider.value = 0;
+
+    var mobilitySlider = document.getElementById("mobilitySlider");
+    mobilitySlider.addEventListener("change", onMobilitySliderChange);
+    mobilitySlider.min = 0;
+    mobilitySlider.max = 5;
+    mobilitySlider.step = 1;
+    mobilitySlider.value = 3;
     
     var emissionSlider = document.getElementById("emissionSlider");
     emissionSlider.min = 0;
-    emissionSlider.max = 0.05;
+    emissionSlider.max = 0.03;
     emissionSlider.step = 0.0025;
-    emissionSlider.value = 0.01;
+    emissionSlider.value = 0.015;
 
     var mortalitySlider = document.getElementById("mortalitySlider");
     mortalitySlider.min = 0;
@@ -210,34 +236,35 @@ function Game(spec){
     survivalDurationSlider.min = 1;
     survivalDurationSlider.max = 10;
     survivalDurationSlider.step = 1;
-    survivalDurationSlider.value = 5;
+    survivalDurationSlider.value = 2;
 
     var infectionDurationSlider = document.getElementById("infectionDurationSlider");
     infectionDurationSlider.min = 1;
     infectionDurationSlider.max = 10;
     infectionDurationSlider.step = 1;
-    infectionDurationSlider.value = 5;
+    infectionDurationSlider.value = 4;
 
     var resistanceDurationSlider = document.getElementById("resistanceDurationSlider");
     resistanceDurationSlider.min = 1;
     resistanceDurationSlider.max = 10;
     resistanceDurationSlider.step = 1;
-    resistanceDurationSlider.value = 5;
+    resistanceDurationSlider.value = 8;
 
-    var mobilitySlider = document.getElementById("mobilitySlider");
-    mobilitySlider.min = 0;
-    mobilitySlider.max = 1;
-    mobilitySlider.step = 1;
-    mobilitySlider.value = 5;
+    var paralysisSlider = document.getElementById("paralysisSlider");
+    paralysisSlider.min = 0;
+    paralysisSlider.max = 1;
+    paralysisSlider.step = 0.2;
+    paralysisSlider.value = 0.6;
 
 
     var sliders = {
         populationSlider,
         immunitySlider,
+        mobilitySlider,
 
         emissionSlider,
         mortalitySlider,
-        mobilitySlider,
+        paralysisSlider,
         survivalDurationSlider,
         infectionDurationSlider,
         resistanceDurationSlider,
@@ -262,6 +289,7 @@ function Game(spec){
 
     onPopulationSliderChange();
     onImmunitySliderChange();
+    onMobilitySliderChange();
 
     start();
 

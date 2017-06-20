@@ -6,6 +6,7 @@ function Agent(spec){
 		worldToScreen,
 		shader,
 		agentIndex,
+		susceptibleAgents,
 	} = spec;
 
 	var origin = {
@@ -40,12 +41,12 @@ function Agent(spec){
 	var baseStroke = "#444";
 
 	var speed = 3;
-	var mobility = Math.abs(gaussian(0, 2)())+1;
+	var gauss = null;
+	var mobility = 0;
 
 	var focus = false;
 	var click = false;
 
-	var gauss = gaussian(0, mobility);
 
 	var noiseScale = boundary.zoom;
 	var noisePower = 1;
@@ -74,6 +75,8 @@ function Agent(spec){
     sprite.tint = 0x000000;
 	sprite.scale.set(0.5, 0.5);
 	sprite.anchor.set(0.5, 0.5);
+
+	var susceptible = false;
 
 	var update = function(time, timeDelta){
 
@@ -105,6 +108,7 @@ function Agent(spec){
 		if (resistanceProgress < 1) {
 			resistanceProgress = tickProgress(resistanceProgress, resistanceDuration, timeDelta);
 			if (resistanceProgress == 1) {
+				setSusceptible(true);
 				refreshTint();
 			}
 		}
@@ -132,7 +136,7 @@ function Agent(spec){
 		y = position.y-y;
 		if (Math.abs(x) > radius) return false;
 		if (Math.abs(y) > radius) return false;
-		return magnitude(x, y) < radius;
+		return sqrmagnitude(x, y) < radius*radius;
 	}
 
 	var contact = function(CONTACTAGENT){
@@ -152,10 +156,12 @@ function Agent(spec){
 		if (pathogen == null) {
 			pathogen = PATHOGEN;
 			refreshTint();
+			setSusceptible(false);
 		}
 	}
 
 	var kill = function(){
+		setSusceptible(false);
 
 	}
 
@@ -188,22 +194,22 @@ function Agent(spec){
 		//console.log(TAG+"Setting destination=%s, direction=%s", pointString(destination), pointString(direction));
 	}
 
-	var randomizeDestination = function(signVector = null){
-		if (pathogen != null) {
-		}
-		// gaussX = gaussian(origin.x-position.x, mobility);
-		// gaussY = gaussian(origin.y-position.y, mobility);
-
+	var randomizeDestination = function(){
 		var dx;
 		var dy;
 
-		if (signVector != null) {
-			dx = position.x+signVector.x-origin.x;
-			dy = position.y+signVector.y-origin.y;
+		dx = gauss();
+		dy = gauss();
+
+		if (pathogen != null) {
+			dx *= (1-pathogen.paralysis); 
+			dy *= (1-pathogen.paralysis); 
+			// dx = pathogen.gauss();
+			// dy = pathogen.gauss();
 		}
 		else {
-			dx = gauss();
-			dy = gauss();
+			// dx = gauss();
+			// dy = gauss();
 		}
 
 		if (Math.random() < 0.5) dx = position.x-origin.x;
@@ -217,8 +223,8 @@ function Agent(spec){
 		ox = clamp(-boundary.x, boundary.x, ox);
 		oy = clamp(-boundary.y, boundary.y, oy);
 
-		// setDestination(dx, dy);
-		setDestination(origin.x+dx, origin.y+dy);
+		setDestination(ox, oy);
+		// setDestination(origin.x+dx, origin.y+dy);
 	}
 
 	var reverseDirection = function(){
@@ -270,21 +276,23 @@ function Agent(spec){
 	}
 
 	var setMobility = function(MOBILITY){
-		if (mobility != MOBILITY) {
-			mobility = MOBILITY;
-			gauss = gaussian(0, mobility*4);
-			// speed = mobility;
-		}
+		mobility = Math.abs(gaussian(0, MOBILITY/2)())+0.1;
+		gauss = gaussian(0, mobility);
 	}
 
 	var setImmune = function(IMMUNE){
 		if (immune != IMMUNE) {
 			immune = IMMUNE;
 			if (immune) {
-				if (pathogen != null) pathogen.destroy();
-				pathogen = null;
+				if (pathogen != null) {
+					pathogen.destroy();
+					pathogen = null;
+				}
+				resistanceProgress = 1;
+				setSusceptible(false);
 			}
 			else {
+				setSusceptible(true);
 			}
 			refreshTint();
 		}
@@ -298,9 +306,13 @@ function Agent(spec){
 		return pathogen;
 	}
 
+	var getInfected = function(){
+		return pathogen != null;
+	}
+
 	var destroy = function(){
+		setSusceptible(false);
 		unsubscribe(reset);
-		unsubscribe(onSetSimState);
 		pixi.scene.removeChild(sprite);
 	}
 
@@ -315,30 +327,15 @@ function Agent(spec){
 		refreshTint();
 	}
 
-	var onSetSimState = function(SIMSTATE){
-		if (simState != SIMSTATE) {
-			//simState = SIMSTATE;
-			if (SIMSTATE) {
-				//randomizeDestination();
-				//focus = false;
-			}
-			else {
-				pathogen = null;
-				// setPosition(origin.x, origin.y);
-			}
+	var setSusceptible = function(SUSCEPTIBLE){
+		if (susceptible != SUSCEPTIBLE) {
+			susceptible = SUSCEPTIBLE;
+			if (susceptible) susceptibleAgents.push(self);
+			else susceptibleAgents.splice(susceptibleAgents.indexOf(self), 1);
 		}
 	}
 
-	setImmune(spec.immune);
-
-	subscribe("/sim/state", onSetSimState);
-	subscribe("/reset", reset);
-
-	randomizeOrigin();
-
-	refreshTint();
-
-	return Object.freeze({
+	var self = Object.freeze({
 		// Fields
 		TAG,
 		agentIndex,
@@ -354,11 +351,42 @@ function Agent(spec){
 		infect,
 		recover,
 
+		setMobility,
 		setImmune,
 		getImmune,
 
 		getPathogen,
+		getInfected,
 
 		destroy,
+	});
+
+	setSusceptible(true);
+	setImmune(spec.immune);
+	setMobility(spec.mobility);
+
+	subscribe("/reset", reset);
+
+	randomizeOrigin();
+
+	refreshTint();
+
+	return self;
+}
+
+var agent_states = Object.freeze({
+	healthy: 0,
+	infected: 1,
+	resistant: 2,
+	immune: 3,
+	dead: 4,
+});
+
+function Agent_Healthy(){
+
+
+
+	return Object.freeze({
+
 	});
 }

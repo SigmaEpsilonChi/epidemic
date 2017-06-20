@@ -13,7 +13,7 @@ function Pathogen(spec){
 		resistanceDuration = 16,
 
 		mortality = 0,
-		mobility = 0.1,
+		paralysis = 0.1,
 	} = spec;
 
 	var survivalProgress = 0;
@@ -43,7 +43,7 @@ function Pathogen(spec){
     var host = null;
     var emissionTimer = 0;
 
-    var gauss = gaussian(0, mobility);
+    var gauss = gaussian(0, paralysis);
 
 	var update = function(time, timeDelta){
 		if (!destroyed) {
@@ -82,22 +82,18 @@ function Pathogen(spec){
 		}
 	}
 
-	var getMobility = function(){
-		return mobility;
-	}
-
 	// Check for contact with an agent and attempt to infect them
 	var contact = function(agent){
 		if (host != null) return false;
-		if (agent.getPathogen() != null) return false;
-		if (agent.getImmune()) return false;
+		// if (agent.getImmune()) return false;
+		// if (agent.getInfected()) return false;
 
 		if (agent.overlap(position.x, position.y)) {
-			if (agent.getImmune()) destroy();
-			else {
+			// if (agent.getImmune()) destroy();
+			// else {
 				infect(agent);
 				return true;
-			}
+			// }
 		}
 		return false;
 	}
@@ -155,6 +151,7 @@ function Pathogen(spec){
 		// Fields
 		position,
 		resistanceDuration,
+		paralysis,
 
 		// Methods
 		update,
@@ -166,8 +163,6 @@ function Pathogen(spec){
 		kill,
 
 		setPosition,
-
-		getMobility,
 
 		destroy,
 	});

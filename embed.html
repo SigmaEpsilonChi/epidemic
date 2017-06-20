@@ -92,7 +92,6 @@ body{
 }
 
 input {
-    pointer-events: auto;
 }
 
 .slider {
@@ -100,12 +99,14 @@ input {
     align-self: stretch;
     align-content: stretch;
     justify-content: center;
+    
+    margin: 8px 0px;
     height: 30px;
-    background: #222;
 
+    background: #222;
     border-radius: 8px;
 
-    margin: 8px 0px;
+    pointer-events: auto;
 }
 
 .slider > #label {
@@ -214,6 +215,11 @@ input {
                         <input id="immunitySlider" type="range">
                     </div>
                     
+                    <div class="slider">
+                        <div id="label">MOBILITY</div>
+                        <input id="mobilitySlider" type="range">
+                    </div>
+                    
                     <h2>Pathogen</h2>
                     <div class="slider">
                         <div id="label">EMISSION</div>
@@ -231,9 +237,9 @@ input {
                         <div id="label">RESISTANCE</div>
                         <input id="resistanceDurationSlider" type="range">
                     </div>
-                    <div class="slider" style="display:none;">
-                        <div id="label">MOBILITY</div>
-                        <input id="mobilitySlider" type="range">
+                    <div class="slider">
+                        <div id="label">PARALYSIS</div>
+                        <input id="paralysisSlider" type="range">
                     </div>
                     <div class="slider" style="display:none;">
                         <div id="label">MORTALITY</div>
