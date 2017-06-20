@@ -62,7 +62,7 @@ function Game(spec){
     var redraw = true;
 
     var gizmos = new PIXI.Graphics();
-    scene.addChild(gizmos);
+    // scene.addChild(gizmos);
 
     var start = function(){
         timeDelta = 1/FPS;

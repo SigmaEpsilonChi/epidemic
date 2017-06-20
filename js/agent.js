@@ -276,7 +276,7 @@ function Agent(spec){
 	}
 
 	var setMobility = function(MOBILITY){
-		mobility = Math.abs(gaussian(0, MOBILITY/2)())+0.1;
+		mobility = Math.abs(gaussian(0, MOBILITY/2+0.1)())+0.1;
 		gauss = gaussian(0, mobility);
 	}
 

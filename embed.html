@@ -43,7 +43,7 @@ body{
     align-items: stretch;
 
     display: block;
-    width: 400px;
+    width: 350px;
     height: 400px;
     margin: 32px;
     padding: 4px;
@@ -92,16 +92,17 @@ body{
 }
 
 input {
+
 }
 
 .slider {
     display: flex;
+    flex-direction: column;
     align-self: stretch;
     align-content: stretch;
     justify-content: center;
-    
+
     margin: 8px 0px;
-    height: 30px;
 
     background: #222;
     border-radius: 8px;
@@ -109,11 +110,28 @@ input {
     pointer-events: auto;
 }
 
-.slider > #label {
-    display: flex;
-    width: 150px;
-    height: 40px;
+.slider > #top {
+    align-content: stretch;
+
     color: #FFF;
+}
+
+.slider > #top > #title {
+    margin-left: 8px;
+    float: left;
+    color: #FFF;
+}
+
+.slider > #top > input {
+    margin-right: 8px;
+    float: right;
+}
+
+.slider > #description {
+    color: #888;
+    margin-left: 8px;
+
+    font-size: 14px;
 }
 
 /*
@@ -206,44 +224,71 @@ input {
                     
                     <h2>People</h2>
                     <div class="slider">
-                        <div id="label">POPULATION</div>
-                        <input id="populationSlider" type="range">
+                        <div id="top">
+                            <div id="title">POPULATION</div>
+                            <input id="populationSlider" type="range">
+                        </div>
+                        <div id="description">How many people live here?</div>
                     </div>
                     
                     <div class="slider">
-                        <div id="label">IMMUNITY</div>
-                        <input id="immunitySlider" type="range">
+                        <div id="top">
+                            <div id="title">IMMUNITY</div>
+                            <input id="immunitySlider" type="range">
+                        </div>
+                        <div id="description">How many people are totally immune?</div>
                     </div>
                     
                     <div class="slider">
-                        <div id="label">MOBILITY</div>
-                        <input id="mobilitySlider" type="range">
+                        <div id="top">
+                            <div id="title">MOBILITY</div>
+                            <input id="mobilitySlider" type="range">
+                        </div>
+                        <div id="description">How much do people move around?</div>
                     </div>
                     
                     <h2>Pathogen</h2>
                     <div class="slider">
-                        <div id="label">EMISSION</div>
-                        <input id="emissionSlider" type="range">
+                        <div id="top">
+                            <div id="title">EMISSION</div>
+                            <input id="emissionSlider" type="range">
+                        </div>
+                        <div id="description">How quickly do pathogens reproduce?</div>
                     </div>
                     <div class="slider">
-                        <div id="label">SURVIVAL</div>
-                        <input id="survivalDurationSlider" type="range">
+                        <div id="top">
+                            <div id="title">SURVIVAL</div>
+                            <input id="survivalDurationSlider" type="range">
+                        </div>
+                        <div id="description">How long do drifting pathogens survive?</div>
                     </div>
                     <div class="slider">
-                        <div id="label">INFECTION</div>
-                        <input id="infectionDurationSlider" type="range">
+                        <div id="top">
+                            <div id="title">INFECTION</div>
+                            <input id="infectionDurationSlider" type="range">
+                        </div>
+                        <div id="description">How long do infections last?</div>
                     </div>
                     <div class="slider">
-                        <div id="label">RESISTANCE</div>
-                        <input id="resistanceDurationSlider" type="range">
+                        <div id="top">
+                            <div id="title">RESISTANCE</div>
+                            <input id="resistanceDurationSlider" type="range">
+                        </div>
+                        <div id="description">How long does resistance last?</div>
                     </div>
                     <div class="slider">
-                        <div id="label">PARALYSIS</div>
-                        <input id="paralysisSlider" type="range">
+                        <div id="top">
+                            <div id="title">PARALYSIS</div>
+                            <input id="paralysisSlider" type="range">
+                        </div>
+                        <div id="description">How close do infected patients stay to home?</div>
                     </div>
                     <div class="slider" style="display:none;">
-                        <div id="label">MORTALITY</div>
-                        <input id="mortalitySlider" type="range">
+                        <div id="top">
+                            <div id="title">MORTALITY</div>
+                            <input id="mortalitySlider" type="range">
+                        </div>
+                        <div id="description">How likely are patients to die?</div>
                     </div>
 
                     <div class="bigButton" id="resetButton">RESET</div>
