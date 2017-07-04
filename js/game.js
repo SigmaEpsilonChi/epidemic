@@ -56,13 +56,17 @@ function Game(spec){
     var timeDelta;
     var drawTime = 0;
 
-    var FPS = 60;
+    var FPS = 30;
     var timerId = 0;
     var animationTimestamp = 0;
     var redraw = true;
 
     var gizmos = new PIXI.Graphics();
     // scene.addChild(gizmos);
+
+    var statTimer = 0;
+    var statInterval = 1;
+    var statSamples = 30;
 
     var start = function(){
         timeDelta = 1/FPS;
@@ -87,6 +91,102 @@ function Game(spec){
         time = time+timeDelta;
         population.update(time, timeDelta);
         redraw = true;
+
+        statTimer += statInterval*timeDelta;
+
+        if (statTimer >= statInterval) {
+            while (stats.values.length < statSamples) stats = population.getStats(statSamples);
+            while (statTimer >= statInterval) {
+                stats = population.getStats(statSamples);
+                statTimer -= statInterval;
+            }
+            /*
+            var cx = d3.scaleLinear()
+                .domain([0, stats.length - 1])
+                .range([0, width]);
+
+            var cy = d3.scaleLinear()
+                .domain([d3.min(layers0, stackMin), d3.max(layers0, stackMax)])
+                .range([height, 0]);
+
+            var z = d3.interpolateCool;
+            */
+
+            var stack = d3.stack()
+                .keys(stats.colors)
+                .offset(d3.stackOffsetExpand)(stats.values);
+
+            var paths = chart.selectAll("path")
+                .data(stack);
+
+            var area = d3.area()
+                .x(function(d, i) { return cx(i); })
+                .y0(function(d) { return cy(d[0]); })
+                .y1(function(d) { return cy(d[1]); });
+
+            paths.attr("class", "update");
+            paths.enter().append("path")
+                .attr("d", area)
+                .attr("fill", function(d, i) { return stats.colors[i]; })
+                .merge(paths)
+                    .attr("d", area)
+                    .attr("fill", function(d, i) { return stats.colors[i]});
+
+            paths.exit().remove();
+            /*
+
+            var columns = chart.selectAll("g")
+                .data(stack);
+            columns.attr("class", "update");
+
+            columns.enter().append("g")
+                .attr("class", "enter")
+                .attr("width", width/30)
+                .attr("height", height)
+                .attr("transform", function(d, i){return "translate(" + i*width/30 + ", 0)";});
+
+            var rows = columns.selectAll("rect")
+                .data(function(d){return d;})
+                .enter().append("rect")
+                    .attr("width", width/30)
+                    // .attr("height", function(d){return cy(d);})
+                    .attr("fill", function(d, i, g) { return z(i/4)});
+                    // .attr("y", function(d, i, g) { return cy(g[1]); })
+                    // .attr("height", function(d, i, g) { return cy(g[0]) - cy(g[1]); });
+            // columns.exit.remove();
+            */
+        }
+
+        /*
+        stats = population.getStats();
+        layers0 = stack(stats);
+
+
+        cx = d3.scaleLinear()
+            .domain([0, stats.length - 1])
+            .range([0, width]);
+
+        cy = d3.scaleLinear()
+            .domain([d3.min(layers0, stackMin), d3.max(layers0, stackMax)])
+            .range([height, 0]);
+
+        z = d3.interpolateCool;
+
+        area = d3.area()
+            .x(function(d, i) { return cx(i); })
+            .y0(function(d) { return cy(d[0]); })
+            .y1(function(d) { return cy(d[1]); });
+        */
+
+        /*
+        svg.selectAll("path")
+          .data(layers0)
+          .enter().append("path")
+            .attr("d", area)
+            .attr("fill", function() { return z(Math.random()); });
+        */
+
+        // layers0 = stack(d3.range(n).map(function() { return bumps(m, k); }));
     }
 
     var reset = function(){
@@ -181,12 +281,14 @@ function Game(spec){
         var p = parseInt(populationSlider.value);
         p = Math.pow(2, p);
 
-        setZoom(Math.sqrt(p)/2+4);
+        setZoom(Math.sqrt(p)/3+1);
+
+        // reset();
 
         population.setAgentCount(0);
         population.setAgentCount(p);
 
-        reset();
+        // reset();
     }
 
     var onImmunitySliderChange = function(){
@@ -202,9 +304,9 @@ function Game(spec){
     var populationSlider = document.getElementById("populationSlider");
     populationSlider.addEventListener("change", onPopulationSliderChange);
     populationSlider.min = 1;
-    populationSlider.max = 10;
+    populationSlider.max = 11;
     populationSlider.step = 1;
-    populationSlider.value = 10;
+    populationSlider.value = 11;
 
     var immunitySlider = document.getElementById("immunitySlider");
     immunitySlider.addEventListener("change", onImmunitySliderChange);
@@ -216,7 +318,7 @@ function Game(spec){
     var mobilitySlider = document.getElementById("mobilitySlider");
     mobilitySlider.addEventListener("change", onMobilitySliderChange);
     mobilitySlider.min = 0;
-    mobilitySlider.max = 5;
+    mobilitySlider.max = 6;
     mobilitySlider.step = 1;
     mobilitySlider.value = 3;
     
@@ -224,38 +326,45 @@ function Game(spec){
     emissionSlider.min = 0;
     emissionSlider.max = 0.03;
     emissionSlider.step = 0.0025;
-    emissionSlider.value = 0.015;
+    emissionSlider.value = 0.01;
 
     var mortalitySlider = document.getElementById("mortalitySlider");
     mortalitySlider.min = 0;
     mortalitySlider.max = 1;
     mortalitySlider.step = 0.05;
-    mortalitySlider.value = 0.1;
+    mortalitySlider.value = 0;
 
     var survivalDurationSlider = document.getElementById("survivalDurationSlider");
     survivalDurationSlider.min = 1;
-    survivalDurationSlider.max = 10;
+    survivalDurationSlider.max = 11;
     survivalDurationSlider.step = 1;
-    survivalDurationSlider.value = 2;
+    survivalDurationSlider.value = 6;
 
     var infectionDurationSlider = document.getElementById("infectionDurationSlider");
     infectionDurationSlider.min = 1;
-    infectionDurationSlider.max = 10;
+    infectionDurationSlider.max = 11;
     infectionDurationSlider.step = 1;
-    infectionDurationSlider.value = 4;
+    infectionDurationSlider.value = 6;
 
     var resistanceDurationSlider = document.getElementById("resistanceDurationSlider");
-    resistanceDurationSlider.min = 1;
-    resistanceDurationSlider.max = 10;
-    resistanceDurationSlider.step = 1;
-    resistanceDurationSlider.value = 8;
+    resistanceDurationSlider.min = 0;
+    resistanceDurationSlider.max = 1;
+    resistanceDurationSlider.step = 0.1;
+    resistanceDurationSlider.value = 0.5;
 
     var paralysisSlider = document.getElementById("paralysisSlider");
     paralysisSlider.min = 0;
-    paralysisSlider.max = 1;
-    paralysisSlider.step = 0.2;
-    paralysisSlider.value = 0.6;
+    paralysisSlider.max = 0.8;
+    paralysisSlider.step = 0.1;
+    paralysisSlider.value = 0.4;
 
+    var colors = [
+        "rgb(16, 16, 16)",
+        "rgb(234, 192, 32)",
+        "rgb(32, 192, 234)",
+        "rgb(212, 212, 220)",
+        "rgb(230, 230, 230)",
+    ];
 
     var sliders = {
         populationSlider,
@@ -291,6 +400,106 @@ function Game(spec){
     onImmunitySliderChange();
     onMobilitySliderChange();
 
+    var z = d3.interpolateCool;
+    var stats = population.getStats();
+
+    var width = 480;
+    var height = 160;
+
+    var chart = d3.select(".chart");
+    chart.attr("width", width);
+    chart.attr("height", height);
+    var cx = d3.scaleLinear()
+        .domain([0, statSamples-1])
+        .range([0, width]);
+
+    var cy = d3.scaleLinear()
+        .domain([0, 1])
+        .range([0, height]);
+    /*
+    */
+
+        
+    function stackMax(layer) {
+      return d3.max(layer, function(d) { return d[1]; });
+    }
+
+    function stackMin(layer) {
+      return d3.min(layer, function(d) { return d[0]; });
+    }
+    
+    /*
+    var n = 3, // number of layers
+        m = 200, // number of samples per layer
+        k = 10; // number of bumps per layer
+
+    var stack = d3.stack().keys(d3.range(stats[0].length)).offset(d3.stackOffsetExpand),
+        layers0 = stack(stats);
+        // layers0 = stack(d3.transpose(d3.range(n).map(function() { return bumps(m, k); }))),
+
+    var svg = d3.select(".chart"),
+        width = +svg.attr("width"),
+        height = +svg.attr("height");
+
+    var cx = d3.scaleLinear()
+        .domain([0, stats.length - 1])
+        .range([0, width]);
+
+    var cy = d3.scaleLinear()
+        .domain([d3.min(layers0, stackMin), d3.max(layers0, stackMax)])
+        .range([height, 0]);
+
+    var z = d3.interpolateCool;
+
+    var area = d3.area()
+        .x(function(d, i) { return cx(i); })
+        .y0(function(d) { return cy(d[0]); })
+        .y1(function(d) { return cy(d[1]); });
+
+    svg.selectAll("path")
+      .data(layers0)
+      .enter().append("path")
+        .attr("d", area)
+        .attr("fill", function() { return z(Math.random()); });
+
+    function stackMax(layer) {
+      return d3.max(layer, function(d) { return d[1]; });
+    }
+
+    function stackMin(layer) {
+      return d3.min(layer, function(d) { return d[0]; });
+    }
+
+    function transition() {
+      var t;
+      d3.selectAll("path")
+        .data((t = layers1, layers1 = layers0, layers0 = t))
+        .transition()
+          .duration(2500)
+          .attr("d", area);
+    }
+
+    // Inspired by Lee Byron’s test data generator.
+    function bumps(n, m) {
+      var a = [], i;
+      for (i = 0; i < n; ++i) a[i] = 0;
+      for (i = 0; i < m; ++i) bump(a, n);
+      return a;
+    }
+
+    function bump(a, n) {
+      var x = 1 / (0.1 + Math.random()),
+          y = 2 * Math.random() - 0.5,
+          z = 10 / (0.1 + Math.random());
+      for (var i = 0; i < n; i++) {
+        var w = (i / n - y) * z;
+        a[i] += x * Math.exp(-w * w);
+      }
+    }
+    */
+
+
+    // START!
     start();
 
 	return Object.freeze({

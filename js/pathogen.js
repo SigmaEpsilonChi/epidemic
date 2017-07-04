@@ -14,6 +14,9 @@ function Pathogen(spec){
 
 		mortality = 0,
 		paralysis = 0.1,
+		mutation = 0.1,
+
+		addRna,
 	} = spec;
 
 	var survivalProgress = 0;
@@ -48,6 +51,7 @@ function Pathogen(spec){
 	var update = function(time, timeDelta){
 		if (!destroyed) {
 			if (host == null) {
+				// console.log("Updating hostless pathogen");
 				survivalProgress = tickProgress(survivalProgress, survivalDuration, timeDelta);
 
 				var x = worldToScreen.transformX(position.x);
@@ -60,15 +64,17 @@ function Pathogen(spec){
 				sprite.height = r*p;
 
 				if (survivalProgress >= 1) {
-					kill();
+					destroy();
 				}
 				else {
+					// console.log("Checking %s agents", agents.length);
 			    	for (var i = 0; i < agents.length; i++) {
-			    		contact(agents[i]);
+			    		if (contact(agents[i])) break;
 			    	}
 				}
 			}
 			else {
+				// console.log("Updating hosted pathogen: host=%s", host.agentIndex);
 				emissionTimer += timeDelta;
 				if (Math.random() < emissionTimer*emission) {
 					emissionTimer = 0;
@@ -77,7 +83,10 @@ function Pathogen(spec){
 
 				infectionProgress = tickProgress(infectionProgress, infectionDuration, timeDelta);
 
-				if (infectionProgress >= 1) recover();
+				if (infectionProgress >= 1) {
+					if (Math.random() < mortality) host.kill();
+					else recover();
+				}
 			}
 		}
 	}
@@ -85,28 +94,40 @@ function Pathogen(spec){
 	// Check for contact with an agent and attempt to infect them
 	var contact = function(agent){
 		if (host != null) return false;
-		// if (agent.getImmune()) return false;
+		// if (agent.hasAntibody(rna)) return false;
 		// if (agent.getInfected()) return false;
 
 		if (agent.overlap(position.x, position.y)) {
-			// if (agent.getImmune()) destroy();
-			// else {
-				infect(agent);
-				return true;
-			// }
+			if (agent.getInfected()) destroy();
+			else if (agent.hasAntibody(rna)) destroy();
+			else infect(agent);
+			return true;
 		}
 		return false;
 	}
 
 	var infect = function(agent){
+		if (host != agent) {
+			if (agent.getInfected()) {
+				console.log("Agent is already infected (Agent "+agent.agentIndex+")");
+				return;
+			}
 		// console.log("Agent %s is infecting agent %s", host.agentIndex, agent.agentIndex);
-		pixi.scene.removeChild(sprite);
-		host = agent;
-		agent.infect(self);
+			if (Math.random() < Math.pow(mutation/16, 2)) {
+				setRna(addRna());
+				// setRna(Rna((rna.signature+0.25+Math.random()/4)%1));
+				console.log("Mutating to "+rna.signature);
+			}
+			host = agent;
+			rna.addHost(host);
+			pixi.scene.removeChild(sprite);
+			agent.infect(self);
+		}
 	}
 
 	var recover = function(){
 		if (host != null) {
+			// console.log("Pathogen recovering: Agent "+host.agentIndex);
 			host.recover();
 			host = null;
 			destroy();
@@ -117,35 +138,70 @@ function Pathogen(spec){
 		destroy();
 	}
 
+	var setRna = function(RNA){
+		if (rna != RNA) {
+			if (rna != null) rna.removePathogen(self);
+
+			rna = RNA;
+
+			rna.addPathogen(self);
+			sprite.tint = rna.getHexValue();
+
+		}
+	}
+
+	var getRna = function(){
+		return rna;
+	}
+
 	var setPosition = function(x, y){
 		position.x = x;
 		position.y = y;
 	}
 
 	var emit = function(){
-		var pathogen = addPathogen();
-		// var pathogen = addPathogen(Pathogen(spec));
+		/*
+		var pathogen;
+		if (Math.random() < Math.pow(mutation/15, 2)) {
+			pathogen = addPathogen();
+			console.log("Mutating to "+pathogen.getRna().signature);
+		}
+		else pathogen = addPathogen(rna);
+		*/
+		var pathogen = addPathogen(rna);
 		var x = host.position.x;
 		var y = host.position.y;
 		var a = Math.random()*Math.PI*2;
 		var r = Math.random();
 		x += Math.cos(a)*r;
 		y += Math.sin(a)*r;
-		pathogen.setPosition(host.position.x, host.position.y);
+		pathogen.setPosition(
+			host.position.x,
+			host.position.y
+			// host.position.x+Math.sign(-host.direction.x)*(host.radius+0.01),
+			// host.position.y+Math.sign(-host.direction.y)*(host.radius+0.01)
+		);
 	}
 
 	var destroyed = false;
 	var destroy = function(){
 		if (!destroyed) {
 			destroyed = true;
-			// console.log("Destroying pathogen");
-			if (host != null) host.recover();
-			unsubscribe(destroy);
+			// unsubscribe(destroy);
+			if (host != null) {
+				rna.removeHost(host);
+				host.recover();
+				host = null;
+			}
+			rna.removePathogen(self);
 			discardPathogen(self);
 			if (sprite.parent != null) sprite.parent.removeChild(sprite);
 			sprite.destroy();
 		}
 	}
+
+	var rna = null;
+	setRna(spec.rna);
 
 	var self = Object.freeze({
 		// Fields
@@ -163,6 +219,9 @@ function Pathogen(spec){
 		kill,
 
 		setPosition,
+
+		setRna,
+		getRna,
 
 		destroy,
 	});
